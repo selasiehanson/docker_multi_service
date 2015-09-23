@@ -1,0 +1,27 @@
+app:
+  build: ./docker_demo
+  command: rails server -p 3000 -b '0.0.0.0'
+  volumes:
+    - ./docker_demo:/web_app
+  ports:
+    - "3000:3000"
+  links:
+    - postgres
+    - rmq
+node_app:
+  build: ./node_service
+  command: nodejs /src/index.js
+  ports:
+    - "8080:8080"
+  links:
+    - rmq
+postgres:
+  image: postgres:9.4
+  ports:
+    - "5432:5432"
+rmq:
+  image: "rabbitmq:management"
+  hostname: "rmq"
+  ports:
+    - '15672:15672'
+    - '5672:5672'

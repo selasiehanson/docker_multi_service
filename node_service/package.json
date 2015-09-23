@@ -1,0 +1,13 @@
+{
+  "name": "sample-nodejs-express-service",
+  "private": true,
+  "version": "0.0.1",
+  "description": "simple express webservice being put into a multi docker webservice project",
+  "author": "SelasieHanson",
+  "dependencies": {
+    "amqplib": "0.3.2",
+    "express": "4.10.2",
+    "morgan": "1.6.1",
+    "rabbit.js": "0.4.4"
+  }
+}

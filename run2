@@ -1,0 +1,14 @@
+status=$(docker-machine status dev)
+
+if [[ "$status" = "Running" ]]; then  
+  # docker machine is already running
+  echo "Machine is already running"
+else
+  echo "Let'ts start our machine"
+  docker-machine start dev
+fi
+
+eval $(docker-machine env dev)
+rm docker_demo/tmp/pids/server.pid 
+docker-compose build
+docker-compose up
