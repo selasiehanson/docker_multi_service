@@ -25,7 +25,11 @@ EXPOSE 3000
 
 ENTRYPOINT ["bundle", "exec"]
 
-CMD ["rails", "server", "-b", "0.0.0.0"]
+#CMD ["env" "WORKERS=Announcer" "bundle" "exec" "rake" "sneakers:run"]
+
+#CMD ["rails", "server", "-b", "0.0.0.0"]
+
+#RUN export WORKERS=Announcer && rake sneakers:run
 
 #docker build -t demo .
 #docker run -it demo "bundle exec rake test"

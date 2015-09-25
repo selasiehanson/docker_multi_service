@@ -1,5 +1,6 @@
 var express = require("express");
 var morgan = require('morgan');
+var amqp = require("amqplib");
 
 // console.log(process.env);
 
@@ -9,11 +10,10 @@ var pass = 'guest';
 var user = 'guest';
 
 var connectionURL = 'amqp://'+ 'guest:guest@'+ RB_ADDR + ':' + RB_PORT;
-var url2 = 'amqp://'+RB_ADDR + ':' + RB_PORT;
+var url = 'amqp://'+RB_ADDR + ':' + RB_PORT;
 
 console.log(connectionURL);
 
-var amqp = require("amqplib");
 
 var PORT = 8080;
 var q = 'tasks';
@@ -23,7 +23,7 @@ var app = express();
 
 app.use(morgan('combined'));
 app.get('/', function (req, res){
-  // var open = amqp.connect(url2);
+  // var open = amqp.connect(url);
   testMe();
   res.json({status: "service is alive"});
 });
@@ -31,13 +31,14 @@ app.get('/', function (req, res){
 app.post('/test', function(req, res){
   console.log('in test')
   console.log(req.body)
-  testMe();
+  // testMe();
+  publishToEx();
   res.json({"status": "testing"});
 });
 
 function testMe(){
   
-  var context = require('rabbit.js').createContext(url2);
+  var context = require('rabbit.js').createContext(url);
   context.on('ready', function() {
     console.log('connection is alive');
     var pub = context.socket('PUB'), sub = context.socket('SUB');
@@ -50,7 +51,7 @@ function testMe(){
   });
 
   context.on('error', function (err){
-    console.log(err)
+    console.log(err);
   });
 }
 
@@ -58,36 +59,45 @@ function testMe(){
 
 // }
 
-// function publish(){  
-//   open.then(function (conn){
-//     var ok = conn.createChannel();
-//     ok = ok.then(function(ch){
-//       //when rabbitmq server quits/crashes, queue will still be present
-//       ch.assertQueue(q, {durable: true});
+function publish(){  
+  var open = amqp.connect(url);
+  open.then(function (conn){
+    var ok = conn.createChannel();
+    ok = ok.then(function(ch){
+      //when rabbitmq server quits/crashes, queue will still be present
+      ch.assertQueue(q, {durable: true});
 
-//       //marking message as persits a message to disk and is only removed when an acknowledgement is sent
-//       ch.sendToQueue(q, new Buffer('somthing to do'), {persistent: true}); 
-//     });
+      //marking message as persits a message to disk and is only removed when an acknowledgement is sent
+      ch.sendToQueue(q, new Buffer('somthing to do'), {persistent: true}); 
+    });
 
-//     return ok;
-//   }).then(null,console.warn);  
-// }
+    return ok;
+  }).then(null,console.warn);  
+}
 
-// function publishToEx(){  
-//   var ex = 'logs';
-//   console.log('in publishing')
-//   open.then(function (conn){
-//     var ok = conn.createChannel();
-//     ok = ok.then(function(ch){
-//       console.log('publishing')
+function publishToEx(){  
+  var ex = 'logs';
+  var open = amqp.connect(url);
+  console.log('in publishing')
+  open.then(function (conn){
+    var ok = conn.createChannel();
+    ok = ok.then(function(ch){
+      console.log('publishing')
       
-//       ch.assertExchange(ex, 'fanout', {durable: false});      
-//       ch.publish(ex,'', new Buffer({text: 'Message from an exchange'}));
-//     });
+      ch.assertExchange(ex, 'fanout', {durable: true});      
+      var message = {
+        someData: 'hello',
+        name: 'Kofi',
+        age: 23
+      };
+      var out = JSON.stringify(message);
+      console.log(out);
+      ch.publish(ex,'', new Buffer(out));
+    });
 
-//     return ok;
-//   }).then(null,console.warn);  
-// }
+    return ok;
+  }).then(null,console.warn);  
+}
 
 // function receiveFromExchange(){
 //   var ex = 'logs';
